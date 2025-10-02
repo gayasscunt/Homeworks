@@ -21,20 +21,19 @@ class Pet:
         print("Энергия:", self.energy, "/100")
         print("Счастье:", self.happiness, "/100")
 
-    # Простейшие действия
     def feed(self, amount=20):
         self.hunger = max(0, self.hunger - amount)
         self.happiness = min(100, self.happiness + 5)
-        print(f"{self.name} поел(а). Голод теперь {self.hunger}/100")
+        print(f"{self.name} поел(а). Голод {self.name} теперь {self.hunger}/100")
 
     def play(self, minutes=15):
         self.energy = max(0, self.energy - minutes//2)
         self.hunger = min(100, self.hunger + minutes//3)
         self.happiness = min(100, self.happiness + minutes//2)
-        print(f"{self.name} поиграл(а). Настроение {self.happiness}/100")
+        print(f"{self.name} поиграл(а). Настроение {self.name} теперь {self.happiness}/100")
 
 
-p1 = Pet("Темми", age=180, hunger=40, energy=60, happiness=70)
+p1 = Pet("Темми", age=180, hunger=40, energy=60, happiness =70)
 
 print(bool(p1))
 print(p1)
@@ -42,3 +41,4 @@ p1.Info()
 p1.feed(25)
 p1.play(20)
 p1.Info()
+
