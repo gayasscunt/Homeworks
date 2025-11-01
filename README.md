@@ -1,0 +1,71 @@
+import sqlite3  # Для работы с базой данных
+import requests  # Для веб-парсинга
+from bs4 import BeautifulSoup  # Для обработки HTML
+from flask import Flask, request, render_template  # Для создания веб-интерфейса
+
+# Создаем объект базы данных
+class Database:
+    def __init__(self, db_name):  # Исправлено на __init__
+        self.conn = sqlite3.connect(db_name)
+        self.cursor = self.conn.cursor()
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS sites (url TEXT, content TEXT)''')
+
+    def add_site(self, url, content):
+        self.cursor.execute('INSERT INTO sites VALUES (?, ?)', (url, content))
+        self.conn.commit()
+
+    def search_sites(self, query):
+        self.cursor.execute('SELECT url, COUNT(*) as count FROM sites WHERE content LIKE ? GROUP BY url', ('%' + query + '%',))
+        result = self.cursor.fetchall()
+        result.sort(key=lambda x: x[1], reverse=True)
+        return result
+
+    def clear_database(self):
+        self.cursor.execute('DELETE FROM sites')
+        self.conn.commit()
+
+# Создаем объект для парсинга сайтов
+class WebParser:
+    def parse_site(self, url):
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                return soup.get_text()
+        except Exception as e:
+            print("Ошибка при парсинге сайта:", str(e))
+        return ""
+
+# Создаем объект пользовательского интерфейса с использованием Flask
+app = Flask(__name__)
+
+# Инициализация базы данных и парсера
+database = Database('sites.db')
+web_parser = WebParser()
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/add_site', methods=['POST'])
+def add_site():
+    url = request.form['url']
+    content = web_parser.parse_site(url)
+    if content:
+        database.add_site(url, content)
+    return render_template('index.html')
+
+@app.route('/search', methods=['POST'])
+def search():
+    query = request.form['query']
+    result = database.search_sites(query)
+    return render_template('search_results.html', results=result)
+
+@app.route('/clear')
+def clear():
+    database.clear_database()
+    return render_template('index.html')
+
+if __name__ == '__main__':  # Исправлено на __name__
+    app.run(debug=True)
+    
